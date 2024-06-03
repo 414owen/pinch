@@ -52,11 +52,11 @@ createChannel c t p = do
 createChannel1 :: (Transport, Protocol) -> (Transport, Protocol) -> Channel
 createChannel1 (tIn, pIn) (tOut, pOut) = Channel tIn tOut pIn pOut
 
-readMessage :: Channel -> IO (ReadResult Message)
+readMessage :: Channel -> IO (ReadResult (Message, Transport.HeaderData))
 readMessage chan = Transport.readMessage (cTransportIn chan) $ deserializeMessage' (cProtocolIn chan)
 
-writeMessage :: Channel -> Message -> IO ()
-writeMessage chan msg = Transport.writeMessage (cTransportOut chan) $ serializeMessage (cProtocolOut chan) msg
+writeMessage :: Channel -> Transport.HeaderData -> Message -> IO ()
+writeMessage chan headers msg = Transport.writeMessage (cTransportOut chan) headers $ serializeMessage (cProtocolOut chan) msg
 
 
 newtype ServiceName = ServiceName T.Text
