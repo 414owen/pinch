@@ -4,6 +4,7 @@
 {-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Pinch.Client
   (
@@ -38,6 +39,7 @@ import           Pinch.Internal.Message
 import           Pinch.Internal.Pinchable
 import           Pinch.Internal.RPC
 import           Pinch.Internal.TType
+import qualified Pinch.Transport as Transport
 
 -- | A simple Thrift Client.
 newtype Client = Client Channel
@@ -52,20 +54,20 @@ data ThriftCall a where
     => !T.Text -> !req -> ThriftCall res
   TOneway :: (Pinchable req, Tag req ~ TStruct) => !T.Text -> !req -> ThriftCall ()
 
-class ThriftClient c where
+class ThriftClient c headers where
   -- | Calls a Thrift service and returns the result/error data structure.
   -- Application-level exceptions defined in the thrift service are returned
   -- as part of the result/error data structure.
-  call :: c -> ThriftCall a -> IO a
+  call :: c -> ThriftCall a -> IO (a, headers)
 
 instance ThriftClient Client where
   call (Client chan) tcall = do
     case tcall of
       TOneway m r -> do
-        writeMessage chan $ Message m Oneway 0 (pinch r)
+        writeMessage chan Transport.emptyHeaderData $ Message m Oneway 0 (pinch r)
         pure ()
       TCall m r -> do
-        writeMessage chan $ Message m Call 0 (pinch r)
+        writeMessage chan Transport.emptyHeaderData $ Message m Call 0 (pinch r)
         reply <- readMessage chan
         case reply of
           RREOF -> throwIO $ ThriftError $ "Reached EOF while awaiting reply"

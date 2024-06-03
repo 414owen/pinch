@@ -95,3 +95,5 @@ spec = do
         writeMessage transp (B.byteString payload)
         actual <- mGetContents buf
         pure $ actual === payload
+
+    -- prop "headerTransport" $ do

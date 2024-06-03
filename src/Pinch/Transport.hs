@@ -12,6 +12,7 @@ module Pinch.Transport
   , framedTransport
   , unframedTransport
   , headerTransport
+  , emptyHeaderData
   , HeaderData(..)
   , Connection(..)
   , ReadResult(..)
