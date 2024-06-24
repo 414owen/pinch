@@ -66,7 +66,7 @@ data HeaderData
   { hSequenceNumber :: !Word32
   , hFlags :: Word16
   , hInfo :: ![(BS.ByteString, BS.ByteString)]
-  }
+  } deriving (Eq, Show)
 
 emptyHeaderData :: HeaderData
 emptyHeaderData = HeaderData 0 0 []

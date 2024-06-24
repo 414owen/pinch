@@ -13,7 +13,8 @@ import qualified Data.ByteString as BS
 import qualified Data.Serialize.Get as G
 
 import Pinch.Arbitrary (SomeByteString(..))
-import Pinch.Transport (Transport(..), framedTransport, unframedTransport, Connection(..), ReadResult(..))
+import Pinch.Transport ( Transport(..), framedTransport, unframedTransport, Connection(..), ReadResult(..)
+                       , emptyHeaderData)
 
 import qualified Pinch.Internal.Builder as B
 
@@ -43,9 +44,9 @@ transportSpec t = do
     ioProperty $ do
       buf <- newMemoryConnection c
       transp <- t buf
-      writeMessage transp (B.byteString bytes)
+      writeMessage transp emptyHeaderData (B.byteString bytes)
       actual <- readMessage transp (G.getBytes $ BS.length bytes)
-      pure $ actual === RRSuccess bytes
+      pure $ actual === RRSuccess (bytes, emptyHeaderData)
 
   it "EOF handling" $ do
     buf <- newMemoryConnection 10
@@ -66,13 +67,13 @@ spec = do
       cPut buf $ B.byteString (BS.pack [0x00, 0x00, 0x00, 0x05])
       cPut buf $ B.byteString payload
       r <- readMessage transp (G.getBytes $ BS.length payload)
-      r `shouldBe` RRSuccess payload
+      r `shouldBe` RRSuccess (payload, emptyHeaderData)
 
     it "write case" $ do
       let payload = BS.pack [0x01, 0x05, 0x01, 0x08, 0xFF]
       buf <- newMemoryConnection 1
       transp <- framedTransport buf
-      writeMessage transp (B.byteString payload)
+      writeMessage transp emptyHeaderData (B.byteString payload)
       actual <- mGetContents buf
       actual `shouldBe` (BS.pack [0x00, 0x00, 0x00, 0x05] <> payload)
 
@@ -86,13 +87,13 @@ spec = do
         transp <- unframedTransport buf
         cPut buf $ B.byteString payload
         r <- readMessage transp (G.getBytes $ BS.length payload)
-        pure $ r === RRSuccess payload
+        pure $ r === RRSuccess (payload, emptyHeaderData)
 
     prop "write cases" $ \(SomeByteString payload) ->
       ioProperty $ do
         buf <- newMemoryConnection 1
         transp <- unframedTransport buf
-        writeMessage transp (B.byteString payload)
+        writeMessage transp emptyHeaderData (B.byteString payload)
         actual <- mGetContents buf
         pure $ actual === payload
 
