@@ -17,6 +17,7 @@ module Pinch.Client
 
   , ThriftCall(..)
   , ThriftClient(..)
+  , call
   , callOrThrow
 
     -- * Multiplexing Client
@@ -40,7 +41,6 @@ import           Pinch.Internal.Message
 import           Pinch.Internal.Pinchable
 import           Pinch.Internal.RPC
 import           Pinch.Internal.TType
-import qualified Pinch.Transport as Transport
 
 -- | A simple Thrift Client.
 newtype Client = Client Channel
